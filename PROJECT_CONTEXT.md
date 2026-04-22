@@ -1,41 +1,4 @@
-# Project Context — For AI Assistant
-
-> This file gives the AI assistant full context about who I am and what I'm building.
-> Paste this at the start of every new chat session.
-
----
-
-## About Me
-
-- **Name:** Sophie Cheng (Cheng, Xin-Ya)
-- **Background:** Dual major in Economics & Foreign Language and Literature, National Taiwan University (GPA 3.91/4.30). Exchange at Singapore Management University.
-- **Current status:** Graduating NTU June 2025. Starting Columbia MSBA in August 2026.
-- **Work experience:** Klook (Platform Operations, SQL + A/B testing), Eastspring Investment (compliance automation), Porsche Taiwan (finance reconciliation), NTU Data Analytics Club (Python data cleaning + ML project participation)
-- **Programming level:** Beginner-intermediate. Familiar with SQL, Excel VBA, basic Python (pandas, data cleaning). Has worked on real datasets (30,000+ rows) with AI assistance. Wants to improve Python independently through this project.
-- **ML level:** Exposure through NTU club project (feature engineering, coordination). No independent ML modeling experience yet. Willing to learn from scratch.
-- **Other tools:** Tableau, Stata, R (econometrics), Power Automate, SAP
-- **Hours available per day:** ~5 hours
-- **Timeline:** ~3.5 months before Columbia starts (deadline: August 2026)
-
----
-
-## Career Goal
-
-- **Target roles:** Business Analyst / Data Analyst / Operations Analyst / AI PM
-- **Target companies:** Tech and entertainment companies (e.g. Netflix, Disney, Spotify, Klook-type platforms), US market preferred
-- **Why this project:** To demonstrate business analytical thinking, data-driven decision making, and basic ML understanding. The project should tell a clear story that resonates with BA/PM interviewers — not just technical output.
-
----
-
-## How I Want to Work With You
-
-- I am learning as I build. **Explain concepts when you write code**, don't just give me the answer.
-- When I ask "how do I do X", **show me the logic first**, then the code.
-- If I'm about to make a bad design decision, **tell me honestly** instead of going along with it.
-- I want to be able to **explain every design decision** in my own words during a job interview.
-- **Challenge me** if my understanding seems wrong or shallow.
-- **Don't let me seek confirmation constantly** — push me to back my own judgment.
-- Default language: **Traditional Chinese (zh-TW)** for explanations, English for code and documentation.
+# StreamLens — Project Context
 
 ---
 
@@ -45,72 +8,172 @@
 - **One-line description:** Detects systematic popularity bias in streaming recommendation systems by analyzing the gap between genre quality (ratings) and genre exposure (rating volume), and proposes data-driven curation strategies.
 - **Core problem being solved:** Streaming platforms like Netflix tend to over-recommend popular content, systematically under-exposing high-quality niche genres. This leads to user frustration, poor content discovery, and potential churn — especially among users with non-mainstream taste.
 - **Personal motivation:** As a Foreign Literature student and arthouse film viewer, I experienced this problem firsthand. I built this project to validate whether my personal experience reflects a systemic pattern in the data.
-- **What makes it non-trivial:** Popularity bias quantification, genre-level fairness analysis, selection bias awareness, business recommendation framing, hybrid curation proposal (algorithmic + editorial)
+- **Target roles:** BA / DA / AI PM at US tech and entertainment companies.
 
 ---
 
-## Technical Stack (Planned)
+## Technical Stack
 
 - **Language:** Python
-- **Data:** MovieLens dataset (public, ~100k+ ratings)
+- **Data:** MovieLens ml-latest (full dataset, ~33.8M ratings, 86,537 movies)
 - **Analysis:** Pandas, NumPy
-- **Visualization:** Matplotlib / Seaborn → Streamlit dashboard
-- **ML (Phase 3):** scikit-learn — predicting underexposed but high-potential genres
-- **Deployment:** Streamlit Cloud or Render
-- **Version control:** GitHub
+- **Visualization:** Matplotlib / Seaborn
+- **ML:** scikit-learn (Logistic Regression + Random Forest)
+- **Dashboard:** Streamlit (localhost running, not yet deployed)
+- **Version control:** GitHub — https://github.com/xinyacheng716/StreamLens
 
 ---
 
-## Project Phases
+## Current Phase Status
 
-- [ ] Phase 0 — Environment setup + explore MovieLens dataset structure
-- [ ] Phase 1 — Data cleaning + genre-level aggregation (ratings vs. exposure volume)
-- [ ] Phase 2 — Bias quantification + visualization (which genres are systematically underexposed?)
-- [ ] Phase 3 — ML layer (can we predict which genres deserve more exposure based on rating patterns?)
-- [ ] Phase 4 — Dashboard + business recommendations write-up + deployment + README
-
-**Current phase:** Phase 0
-**Last thing completed:** Project direction finalized. PROJECT_CONTEXT.md created.
-**Current blocker / question:** None — ready to start Phase 0.
+- [x] Phase 0 — Environment setup + dataset exploration
+- [x] Phase 1 — Data cleaning + genre-level aggregation
+- [x] Phase 2 — Bias quantification + visualization
+- [x] Phase 3 — ML layer (Logistic Regression + Random Forest)
+- [ ] Phase 4 — Dashboard + Write-up + Deployment + README ← CURRENT
 
 ---
 
-## Core Analytical Argument (The Story)
+## Dataset
 
-1. **Observation:** I noticed Netflix rarely surfaces niche foreign/arthouse films despite their strong reviews.
-2. **Hypothesis:** Certain genres consistently receive high ratings but low exposure (measured by number of ratings), suggesting a systemic recommendation bias.
-3. **Analysis:** Use MovieLens data to quantify the rating score vs. rating volume gap across genres. Identify genres that fall in the "high quality, low exposure" quadrant.
-4. **Awareness:** Account for selection bias — niche genres attract self-selected audiences, inflating average ratings. Adjust interpretation accordingly.
-5. **Business recommendation:** Propose a hybrid curation model — algorithmic detection of underexposed genres + periodic editorial intervention (fairness auditing cadence).
-6. **PM angle:** Why not just fix the algorithm? Because every algorithm has blind spots, and fixing one may introduce others. Human-in-the-loop curation is lower risk and more adaptable.
+**Switched from ml-latest-small to ml-latest (full dataset) during Phase 4.**
+
+Reason: ml-latest-small had rating_count median = 1 for underserved films,
+making avg_rating statistically unreliable (CLT requires n ≥ 30).
+ml-latest resolves this — after applying rating_count ≥ 30 threshold,
+1,662 statistically valid underserved films remain.
+
+| Metric | ml-latest-small | ml-latest (current) |
+|--------|----------------|---------------------|
+| Total ratings | 100,836 | 33,832,162 |
+| Movies | 9,742 | 86,537 |
+| Users | 610 | 330,975 |
+| Genres | 18 | 18 |
+
+---
+
+## Key Findings (Confirmed with ml-latest)
+
+### Phase 2 — Bias Score Analysis
+- Pearson r = **−0.266** (updated from −0.365 in small dataset)
+- Moderate negative correlation between genre quality and exposure
+- Most underserved genres: Film-Noir (+0.94), Documentary (+0.78), War (+0.67)
+- Most overpromoted genres: Comedy (−0.78), Action (−0.67)
+- Bias Score formula: `Quality Percentile (avg_rating) − Exposure Percentile (rating_count)`
+
+### Phase 3 — ML Results (updated)
+
+| Model | Accuracy | Class 1 Recall | Class 1 F1 |
+|-------|----------|----------------|------------|
+| Logistic Regression | 0.749 | 0.67 | 0.69 |
+| **Random Forest** | **0.861** | **0.88** | **0.84** |
+
+- `avg_rating` feature importance: **88%** (up from 77% in small dataset)
+- Genre features combined: ~12%
+- Structural reason: high avg_rating → high rating_pct → high bias_score → is_underserved = 1
+- This is not data leakage, but reflects definitional structure
+
+### Film-level underserved list
+- `data/processed/film_underserved.csv` contains all films with rating_count ≥ 30
+- 1,662 underserved films (is_underserved = 1, rating_count ≥ 30)
+- Used in Dashboard Section 4 Interactive Film Explorer
+
+---
+
+## Dashboard Status (app.py)
+
+**Completed sections:**
+- [x] Section 1: The Problem
+- [x] Section 2: The Data
+- [x] Section 3: Bias Evidence (Bias Score bar chart, Correlation scatter, Quadrant chart)
+- [x] Section 4: ML Insights (Model comparison, Feature importance, Interactive Film Explorer)
+- [ ] Section 5: Limitations & Future Work ← NEXT
+- [ ] Section 6: Business Recommendation
+
+**File locations:**
+- Dashboard: `streamlit_app/app.py`
+- Run command: `streamlit run streamlit_app/app.py`
+- Figures: `outputs/figures/`
+  - phase2_bias_score.png
+  - phase2_quadrant.png
+  - phase2_correlation.png
+  - phase3_feature_importance.png
+
+---
+
+## Section 5: Limitations & Future Work (NOT YET WRITTEN)
+
+### Confirmed limitations to include:
+
+**Limitation 1 — Exposure Proxy**
+`rating_count` mixes three sources: algorithmic recommendations,
+organic audience search, and historical content volume.
+r = −0.266 and Bias Scores cannot be attributed solely to algorithmic bias.
+Film-Noir's +0.94 gap is large enough that audience size alone unlikely
+explains it, but the alternative explanation cannot be fully ruled out.
+
+**Limitation 2 — avg_rating Structural Dominance**
+avg_rating accounts for 88% of RF predictive power partly because of
+its direct mathematical link to is_underserved definition, not purely
+external causal factors.
+
+**Limitation 3 — Class Imbalance**
+Overpromoted: 9,038 test samples vs Underserved: 6,267 test samples.
+May cause model to identify overpromoted films slightly better (F1: 0.88 vs 0.84).
+Future fix: oversampling or class_weight parameter.
+
+**Limitation 4 — Dataset Recency**
+MovieLens ml-latest ratings have a cutoff date, not reflecting
+recent streaming platform algorithm changes.
+
+### Future Work to include:
+Replace rating_count with real platform data:
+- **Impression count** → pure algorithmic exposure
+- **Click-through rate (CTR)** → separates "algorithm didn't push" from "audience didn't want"
+- **Completion rate** → more objective quality signal than avg_rating (no selection bias)
+
+---
+
+## Section 6: Business Recommendation (NOT YET WRITTEN)
+
+### Confirmed narrative direction:
+Phase 2 found genre-level bias → Phase 3 found avg_rating is stronger
+signal than genre at film level → Business recommendation should reflect both:
+
+1. Genre-based curation is insufficient alone
+2. Stronger intervention: target high avg_rating + low rating_count films directly
+3. Genre used as secondary signal to prioritise niche content
+
+### Three recommended interventions (to be written as cards):
+1. **Direct film-level intervention** — use avg_rating ≥ threshold + rating_count ≤ threshold
+   as algorithmic trigger for boosted recommendation
+2. **Genre fairness audit cadence** — periodic review of genre-level Bias Scores
+   to catch drift
+3. **Human-in-the-loop editorial layer** — algorithm finds candidates,
+   editors curate final list to avoid pure algorithmic blind spots
 
 ---
 
 ## Design Decisions Log
 
-| Date | Decision | Options Considered | Reason for Choice |
-|------|----------|--------------------|-------------------|
-| 2026-04 | Use MovieLens dataset | Kaggle Netflix dataset vs MovieLens | MovieLens has explicit rating + volume data needed for bias analysis; Netflix dataset lacks rating counts |
-| 2026-04 | Focus on genre-level analysis (not individual films) | Film-level vs genre-level | Genre-level avoids selection bias of individual niche films; more actionable for business recommendations |
-| 2026-04 | Streamlit for dashboard | React + FastAPI vs Streamlit | Streamlit is faster to build and sufficient for BA/PM portfolio demo; React adds complexity without proportional value |
-| 2026-04 | Explode multi-genre rows | Explode vs Fractional counting vs Primary genre only | Fractional shrinks the gap between popular and niche genres by penalizing genres that co-occur with many others — hurting the analysis goal. Explode preserves relative exposure differences across genres consistently. |
-
+| Date | Decision | Options Considered | Reason |
+|------|----------|--------------------|--------|
+| 2026-04 | Use MovieLens dataset | Kaggle Netflix vs MovieLens | MovieLens has explicit rating + volume data |
+| 2026-04 | Genre-level analysis | Film-level vs genre-level | Genre-level avoids selection bias of individual niche films |
+| 2026-04 | Streamlit for dashboard | React + FastAPI vs Streamlit | Faster to build, sufficient for BA/PM portfolio |
+| 2026-04 | Explode multi-genre rows | Explode vs Fractional vs Primary genre only | Preserves relative exposure differences consistently |
+| 2026-04 | Switch to ml-latest | Keep small vs switch full | Small dataset rating_count median = 1, statistically unreliable |
+| 2026-04 | rating_count ≥ 30 threshold | Various thresholds | CLT requires n ≥ 30 for avg_rating to be statistically meaningful |
 
 ---
 
 ## Things I Do NOT Want
 
 - Do not build everything for me without explanation
-- Do not use advanced libraries or patterns I haven't learned yet without flagging it
+- Do not use advanced libraries or patterns I haven't learned yet without flagging
 - Do not skip the "why" when making technical suggestions
 - Do not assume I understand something just because I haven't asked about it
-- Do not let me keep second-guessing my own correct instincts — redirect me to commit to my judgment
-
----
-
-**Current phase:** Phase 4
-**Last thing completed:** Phase 3 — Logistic Regression (0.760) and Random 
-Forest (0.835) built. Feature importance reveals avg_rating accounts for 77% 
-of predictive power, partially challenging the hypothesis that genre 
-composition is the primary driver of underexposure at film level.
-**Current blocker / question:** None — ready to start Phase 4.
+- Do not let me keep second-guessing my own correct instincts — redirect me to commit
+- Always look at actual data before making recommendations
+- Always explain ALL new functions, variables, and background knowledge before showing code
+- Always explain concept/logic before showing code
