@@ -331,3 +331,201 @@ st.dataframe(
 )
 
 st.divider()
+
+# ============================================================
+# SECTION 5: Limitations & Future Work
+# ============================================================
+st.header("5. Limitations & Future Work")
+
+st.markdown(
+    "This analysis rests on several assumptions. "
+    "Understanding where they break down is necessary before acting on the findings."
+)
+
+# Legend as inline tokens on the right side.
+# st.markdown() with unsafe_allow_html=True lets us write raw HTML inside Streamlit.
+# This is necessary here because Streamlit has no native "small inline badge" component.
+# The outer div uses text-align:right to push the tokens to the right side.
+# Each span is a colored dot (the circle unicode character) followed by small label text.
+st.markdown(
+    """
+    <div style="text-align: right; margin-bottom: 8px;">
+        <span style="
+            background-color: #fff3cd;
+            border: 1px solid #f0ad4e;
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 12px;
+            color: #856404;
+            margin-right: 8px;
+        ">High impact</span>
+        <span style="
+            background-color: #cfe2ff;
+            border: 1px solid #9ec5fe;
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 12px;
+            color: #084298;
+        ">Medium impact</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+with st.expander("Limitation 1 — Exposure Proxy", expanded=True):
+    st.warning(
+        """
+        **Problem:** `rating_count` mixes three signals: algorithmic recommendations, 
+        organic audience search, and historical content volume. It is not a clean measure 
+        of algorithmic exposure alone.
+
+        **Impact:** The r = −0.266 correlation and Bias Scores cannot be attributed solely 
+        to platform suppression. Film-Noir's +0.94 gap is large enough that audience size 
+        alone is unlikely to explain it — but that alternative cannot be fully ruled out.
+
+        **Fix with real data:** Replace `rating_count` with impression counts (pure 
+        algorithmic exposure) and click-through rates (separates supply-side suppression 
+        from demand-side disinterest).
+        """
+    )
+
+with st.expander("Limitation 2 — avg_rating Structural Dominance"):
+    st.warning(
+        """
+        **Problem:** `avg_rating` accounts for 88% of Random Forest predictive power — 
+        partly because `is_underserved` was defined using `avg_rating` via `bias_score`. 
+        The model partially learns back the definition.
+
+        **Impact:** The 86.1% accuracy overstates how well genre features alone predict 
+        underexposure. Genre contributes only ~12% of predictive signal.
+
+        **Fix with real data:** Define `is_underserved` using impression data, which breaks 
+        the structural link between `avg_rating` and the target variable.
+        """
+    )
+
+with st.expander("Limitation 3 — Class Imbalance"):
+    st.info(
+        """
+        **Problem:** Test set contains 9,038 overpromoted films vs. 6,267 underserved films 
+        (~1.44:1 ratio). The model identifies overpromoted films slightly better 
+        (F1: 0.88) than underserved ones (F1: 0.84).
+
+        **Impact:** In production, the model may slightly undercount underserved films — 
+        the direction we most want to get right.
+
+        **Fix:** Apply `class_weight='balanced'` in scikit-learn, or use SMOTE oversampling 
+        on the minority class before training.
+        """
+    )
+
+with st.expander("Limitation 4 — Dataset Recency"):
+    st.info(
+        """
+        **Problem:** MovieLens ml-latest has a data cutoff and does not reflect recent 
+        changes in streaming platform algorithms, content libraries, or user behavior.
+
+        **Impact:** Genre bias patterns observed here may have shifted as platforms have 
+        updated their recommendation systems.
+
+        **Fix with real data:** Access live recommendation logs with timestamps to enable 
+        temporal drift analysis.
+        """
+    )
+
+st.divider()
+
+# ============================================================
+# SECTION 6: Business Recommendation
+# ============================================================
+st.header("6. Business Recommendation")
+
+st.markdown(
+    """
+    Section 3 - Bias Evidence confirmed genre-level bias is real: Genres such as Film-Noir, Documentary, and War are 
+    systematically underexposed relative to their quality (r = −0.266).
+
+    Section 4 - ML Insights revealed that at the film level, `avg_rating` accounts for 88% of predictive 
+    power — genre features contribute only ~12%. Genre-based curation alone is therefore 
+    insufficient as an intervention.
+
+    The data supports a three-layer strategy:
+    """
+)
+
+
+# Each intervention uses a left border bar instead of a full colored box.
+# This gives visual structure and hierarchy without the heavy background of st.success().
+# It matches the cleaner aesthetic of the rest of the dashboard.
+# unsafe_allow_html=True is required to render custom HTML/CSS in st.markdown().
+st.markdown(
+    """
+    <div style="
+        border-left: 4px solid #198754;
+        background-color: #f6fdf9;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        border-radius: 0 6px 6px 0;
+    ">
+        <p style="font-weight: 600; margin-bottom: 6px;">
+            Intervention 1 — Film-Level Algorithmic Trigger
+        </p>
+        <p style="margin: 0;">
+            Flag films with <code>avg_rating &gt;= 3.8</code> and 
+            <code>rating_count &lt;= 100</code> as candidates for boosted recommendation.
+            Section 4 shows avg_rating is the dominant signal at the film level. 
+            Targeting films directly — regardless of genre — captures more underserved 
+            content than genre-filtering alone. 1,662 statistically valid films 
+            (rating_count &gt;= 30) qualify under these thresholds in the current dataset.
+        </p>
+    </div>
+
+    <div style="
+        border-left: 4px solid #198754;
+        background-color: #f6fdf9;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        border-radius: 0 6px 6px 0;
+    ">
+        <p style="font-weight: 600; margin-bottom: 6px;">
+            Intervention 2 — Genre Fairness Audit Cadence
+        </p>
+        <p style="margin: 0;">
+            Run quarterly Bias Score analysis across all genres. Flag any genre where 
+            <code>bias_score &gt; 0.3</code> for content team review. Section 3 shows 
+            genre-level patterns are real and measurable. A recurring audit catches drift — 
+            new content additions can shift Bias Scores over time. Five of 18 genres 
+            currently exceed the +0.3 threshold: Film-Noir (+0.94), Documentary (+0.78), 
+            War (+0.67), Western (+0.44), Animation (+0.33).
+        </p>
+    </div>
+
+    <div style="
+        border-left: 4px solid #198754;
+        background-color: #f6fdf9;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        border-radius: 0 6px 6px 0;
+    ">
+        <p style="font-weight: 600; margin-bottom: 6px;">
+            Intervention 3 — Human-in-the-Loop Editorial Layer
+        </p>
+        <p style="margin: 0;">
+            Algorithm surfaces candidates; editorial team makes final curation decisions 
+            before any boost goes live. Every algorithm has blind spots. Limitation 1 
+            confirms that <code>rating_count</code> cannot fully separate algorithmic 
+            suppression from small audience size — human judgment bridges this gap until 
+            cleaner exposure data is available.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown("---")
+
+st.caption(
+    "StreamLens — Genre Fairness Audit for Streaming Recommendations | "
+    "Data: MovieLens ml-latest (33.8M ratings) | "
+    "Built by Sophie Cheng"
+)
