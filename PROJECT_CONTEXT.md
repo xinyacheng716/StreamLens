@@ -19,7 +19,7 @@
 - **Analysis:** Pandas, NumPy
 - **Visualization:** Matplotlib / Seaborn
 - **ML:** scikit-learn (Logistic Regression + Random Forest)
-- **Dashboard:** Streamlit (localhost running, not yet deployed)
+- **Dashboard:** Streamlit — deployed at https://streamlens.streamlit.app
 - **Version control:** GitHub — https://github.com/xinyacheng716/StreamLens
 
 ---
@@ -30,7 +30,8 @@
 - [x] Phase 1 — Data cleaning + genre-level aggregation
 - [x] Phase 2 — Bias quantification + visualization
 - [x] Phase 3 — ML layer (Logistic Regression + Random Forest)
-- [ ] Phase 4 — Dashboard + Write-up + Deployment + README ← CURRENT
+- [x] Phase 4 — Dashboard + Deployment
+- [ ] README ← CURRENT
 
 ---
 
@@ -54,21 +55,22 @@ ml-latest resolves this — after applying rating_count ≥ 30 threshold,
 
 ## Key Findings (Confirmed with ml-latest)
 
-### Phase 2 — Bias Score Analysis
+### Section 3 — Bias Score Analysis
 - Pearson r = **−0.266** (updated from −0.365 in small dataset)
 - Moderate negative correlation between genre quality and exposure
 - Most underserved genres: Film-Noir (+0.94), Documentary (+0.78), War (+0.67)
 - Most overpromoted genres: Comedy (−0.78), Action (−0.67)
 - Bias Score formula: `Quality Percentile (avg_rating) − Exposure Percentile (rating_count)`
+- With sample sizes ranging from 318,917 to 14,377,237, significance testing loses discriminating power. Effect size (Bias Score) is used instead.
 
-### Phase 3 — ML Results (updated)
+### Section 4 — ML Results
 
 | Model | Accuracy | Class 1 Recall | Class 1 F1 |
 |-------|----------|----------------|------------|
 | Logistic Regression | 0.749 | 0.67 | 0.69 |
 | **Random Forest** | **0.861** | **0.88** | **0.84** |
 
-- `avg_rating` feature importance: **88%** (up from 77% in small dataset)
+- `avg_rating` feature importance: **88%**
 - Genre features combined: ~12%
 - Structural reason: high avg_rating → high rating_pct → high bias_score → is_underserved = 1
 - This is not data leakage, but reflects definitional structure
@@ -76,19 +78,39 @@ ml-latest resolves this — after applying rating_count ≥ 30 threshold,
 ### Film-level underserved list
 - `data/processed/film_underserved.csv` contains all films with rating_count ≥ 30
 - 1,662 underserved films (is_underserved = 1, rating_count ≥ 30)
-- Used in Dashboard Section 4 Interactive Film Explorer
 
 ---
 
-## Dashboard Status (app.py)
+## Section 6 — Business Recommendation (Finalised)
 
-**Completed sections:**
+### Three interventions with justified thresholds:
+
+**Intervention 1 — Film-Level Algorithmic Trigger**
+- Flag films with `avg_rating >= 3.8` AND `rating_count <= 60`
+- Why 3.8: mean avg_rating of underserved films is 3.77. 3.8 targets above-average quality within the underserved population.
+- Why 60: median rating_count of underserved films is 58.5. Films below median represent the lower half by exposure, where suppression signal is strongest.
+- Alt threshold: rating_count <= 120 (75th percentile), expands candidate pool to ~1,247 films. Right threshold depends on platform editorial capacity.
+
+**Intervention 2 — Genre Fairness Audit Cadence**
+- Run quarterly Bias Score analysis. Flag genres with `bias_score > 0.3`.
+- Why 0.3: natural gap between Animation (+0.33) and Mystery (+0.28). Not arbitrary — reflects where data clusters into two groups.
+- Conservative alt: threshold 0.5, flags only top 3 (Film-Noir, Documentary, War). Suitable for platforms with limited editorial capacity.
+
+**Intervention 3 — Human-in-the-Loop Editorial Layer**
+- Algorithm surfaces candidates; editorial team makes final decisions before any boost goes live.
+- Rationale: fixing one algorithmic bias can introduce another. rating_count cannot fully separate algorithmic suppression from small audience size — human judgment bridges this gap.
+
+---
+
+## Dashboard Status
+
 - [x] Section 1: The Problem
 - [x] Section 2: The Data
-- [x] Section 3: Bias Evidence (Bias Score bar chart, Correlation scatter, Quadrant chart)
-- [x] Section 4: ML Insights (Model comparison, Feature importance, Interactive Film Explorer)
-- [ ] Section 5: Limitations & Future Work ← NEXT
-- [ ] Section 6: Business Recommendation
+- [x] Section 3: Bias Evidence (Bias Score bar chart, correlation scatter, quadrant chart, effect size explanation, t-test justification)
+- [x] Section 4: ML Insights (model comparison, feature importance, interactive film explorer)
+- [x] Section 5: Limitations & Future Work (4 limitations with impact/severity color coding)
+- [x] Section 6: Business Recommendation (3 interventions with justified thresholds, distribution charts for Int 1, dot plot for Int 2)
+- [x] Deployed: https://streamlens.streamlit.app
 
 **File locations:**
 - Dashboard: `streamlit_app/app.py`
@@ -98,59 +120,6 @@ ml-latest resolves this — after applying rating_count ≥ 30 threshold,
   - phase2_quadrant.png
   - phase2_correlation.png
   - phase3_feature_importance.png
-
----
-
-## Section 5: Limitations & Future Work (NOT YET WRITTEN)
-
-### Confirmed limitations to include:
-
-**Limitation 1 — Exposure Proxy**
-`rating_count` mixes three sources: algorithmic recommendations,
-organic audience search, and historical content volume.
-r = −0.266 and Bias Scores cannot be attributed solely to algorithmic bias.
-Film-Noir's +0.94 gap is large enough that audience size alone unlikely
-explains it, but the alternative explanation cannot be fully ruled out.
-
-**Limitation 2 — avg_rating Structural Dominance**
-avg_rating accounts for 88% of RF predictive power partly because of
-its direct mathematical link to is_underserved definition, not purely
-external causal factors.
-
-**Limitation 3 — Class Imbalance**
-Overpromoted: 9,038 test samples vs Underserved: 6,267 test samples.
-May cause model to identify overpromoted films slightly better (F1: 0.88 vs 0.84).
-Future fix: oversampling or class_weight parameter.
-
-**Limitation 4 — Dataset Recency**
-MovieLens ml-latest ratings have a cutoff date, not reflecting
-recent streaming platform algorithm changes.
-
-### Future Work to include:
-Replace rating_count with real platform data:
-- **Impression count** → pure algorithmic exposure
-- **Click-through rate (CTR)** → separates "algorithm didn't push" from "audience didn't want"
-- **Completion rate** → more objective quality signal than avg_rating (no selection bias)
-
----
-
-## Section 6: Business Recommendation (NOT YET WRITTEN)
-
-### Confirmed narrative direction:
-Phase 2 found genre-level bias → Phase 3 found avg_rating is stronger
-signal than genre at film level → Business recommendation should reflect both:
-
-1. Genre-based curation is insufficient alone
-2. Stronger intervention: target high avg_rating + low rating_count films directly
-3. Genre used as secondary signal to prioritise niche content
-
-### Three recommended interventions (to be written as cards):
-1. **Direct film-level intervention** — use avg_rating ≥ threshold + rating_count ≤ threshold
-   as algorithmic trigger for boosted recommendation
-2. **Genre fairness audit cadence** — periodic review of genre-level Bias Scores
-   to catch drift
-3. **Human-in-the-loop editorial layer** — algorithm finds candidates,
-   editors curate final list to avoid pure algorithmic blind spots
 
 ---
 
@@ -164,6 +133,9 @@ signal than genre at film level → Business recommendation should reflect both:
 | 2026-04 | Explode multi-genre rows | Explode vs Fractional vs Primary genre only | Preserves relative exposure differences consistently |
 | 2026-04 | Switch to ml-latest | Keep small vs switch full | Small dataset rating_count median = 1, statistically unreliable |
 | 2026-04 | rating_count ≥ 30 threshold | Various thresholds | CLT requires n ≥ 30 for avg_rating to be statistically meaningful |
+| 2026-04 | Intervention 1 rating_count threshold = 60 | 60 vs 100 vs 120 | 60 = median of underserved films, suppression signal strongest below median |
+| 2026-04 | Intervention 2 bias_score threshold = 0.3 | Various | Natural gap between Animation (+0.33) and Mystery (+0.28) |
+| 2026-04 | Effect size over significance testing | t-test vs effect size | Large n makes all differences statistically significant; effect size more meaningful |
 
 ---
 
@@ -177,3 +149,7 @@ signal than genre at film level → Business recommendation should reflect both:
 - Always look at actual data before making recommendations
 - Always explain ALL new functions, variables, and background knowledge before showing code
 - Always explain concept/logic before showing code
+- Do not use -- in writing (too AI-sounding)
+- Do not use emoji unless functionally justified
+- Do not refer to sections as "Phase X" in dashboard — use formal section names
+- Do not make mistakes on section numbers or formal names
