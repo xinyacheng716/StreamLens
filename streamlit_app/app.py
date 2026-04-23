@@ -77,20 +77,23 @@ rather than penalising genres that frequently co-occur with others.
 st.divider()
 
 # ════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════
 # SECTION 3: BIAS EVIDENCE
 # ════════════════════════════════════════════════════════════════════════
 st.header("3. Bias Evidence")
 
-st.markdown("""
-We define **Bias Score** as:
+st.markdown(
+    """
+    We define **Bias Score** as:
 
-> `Bias Score = Quality Percentile (avg rating) − Exposure Percentile (rating count)`
+    > `Bias Score = Quality Percentile (avg_rating) − Exposure Percentile (rating_count)`
 
-A **positive** score means a genre is higher quality than its exposure suggests — it is **underserved**.  
-A **negative** score means a genre receives more exposure than its quality warrants — it is **overpromoted**.
-""")
+    A **positive** score means a genre is higher quality than its exposure suggests — it is **underserved**.  
+    A **negative** score means a genre receives more exposure than its quality warrants — it is **overpromoted**.
+    """
+)
 
-# ── Bias Score bar chart ─────────────────────────────────────────────────
+# ── Bias Score bar chart ────────────────────────────────────────────────
 st.subheader("Bias Score by Genre")
 
 st.image(
@@ -99,21 +102,19 @@ st.image(
     use_container_width=True
 )
 
-st.markdown("""
-**Most underserved genres:**
-- 🎬 **Film-Noir** — Bias Score: **+0.94** 
-- 📽️ **Documentary** — Bias Score: **+0.78**
-- ⚔️ **War** — Bias Score: **+0.67**
+st.markdown(
+    """
+    **Most underserved genres:** Film-Noir (+0.94), Documentary (+0.78), War (+0.67)
 
-**Most overpromoted genres:**
-- 😂 **Comedy** — Bias Score: **−0.83**
-- 💥 **Action** — Bias Score: **−0.67**
+    **Most overpromoted genres:** Comedy (−0.78), Action (−0.67)
 
-The Bias Score tells us *how large* the gap is — but not *why* it exists. 
-To understand whether a genre is underserved because of genuinely high quality, 
-or overpromoted despite low quality, we need to look at both dimensions separately.
-""")
+    The Bias Score tells us *how large* the gap is — but not *why* it exists. 
+    To understand whether a genre is underserved because of genuinely high quality, 
+    or overpromoted despite low quality, we need to look at both dimensions separately.
+    """
+)
 
+# ── Correlation chart ───────────────────────────────────────────────────
 st.subheader("Quality vs. Exposure: Genre-Level Correlation")
 
 st.image(
@@ -122,29 +123,44 @@ st.image(
     use_container_width=True
 )
 
-st.markdown("""
-**Pearson r = −0.266** indicates a moderate negative correlation between genre quality 
-and exposure. This means the pattern is **systemic**, not coincidental — 
-higher-rated genres consistently appear in the lower half of exposure.
+st.info(
+    """
+    **Why not use a t-test here?**
 
-Note: r measures the *direction and strength* of the linear relationship between 
-the two variables. It is not a regression slope and carries no unit.
-""")
+    A t-test checks whether the difference between two groups is statistically significant 
+    by calculating a t-statistic, which depends on standard error: `SE = σ / √n`. 
+    The resulting p-value represents the probability of observing this difference purely 
+    by chance if h0 were true. The smaller the p-value, the stronger the evidence to 
+    reject h0.
+
+    The problem is that SE shrinks as n grows. With sample sizes this large — the smallest 
+    genre has 318,917 data points — SE becomes extremely small, pushing p-values near zero 
+    for virtually every comparison. We would reject h0 across the board, making the test 
+    useless as a discriminating tool.
+
+    What matters instead is **effect size**: how large is the difference in practical terms, 
+    independent of sample size? The Bias Score serves this role directly. A score of +0.94 
+    for Film-Noir means its quality percentile rank exceeds its exposure percentile rank by 
+    94 percentage points — a large and meaningful gap regardless of sample size.
+    """
+)
 
 st.divider()
 
-# ── Quadrant chart ───────────────────────────────────────────────────────
+# ── Quadrant chart ──────────────────────────────────────────────────────
 st.subheader("Quality vs. Exposure Quadrant")
 
-st.markdown("""
-The quadrant plots each genre on **two axes simultaneously** — quality percentile (Y) 
-and exposure percentile (X). Unlike the Bias Score which collapses both into a single 
-number, this view shows *where* a genre sits in quality-exposure space, and *why* 
-it received its Bias Score.
+st.markdown(
+    """
+    The quadrant plots each genre on **two axes simultaneously** — quality percentile (Y) 
+    and exposure percentile (X). Unlike the Bias Score which collapses both into a single 
+    number, this view shows *where* a genre sits in quality-exposure space, and *why* 
+    it received its Bias Score.
 
-For example, Film-Noir's Bias Score of +0.94 is explained here: it sits at the 
-**top-left corner** — maximum quality, minimum exposure.
-""")
+    For example, Film-Noir's Bias Score of +0.94 is explained here: it sits at the 
+    **top-left corner** — maximum quality percentile, minimum exposure percentile.
+    """
+)
 
 st.image(
     "outputs/figures/phase2_quadrant.png",
@@ -154,14 +170,16 @@ st.image(
 
 _, col_center, _ = st.columns([0.5, 3, 0.5])
 with col_center:
-    st.markdown("""
+    st.markdown(
+"""
 | Quadrant | Quality | Exposure | Interpretation | Example Genres |
 |----------|---------|----------|----------------|----------------|
 | 🟢 Top-left — Underserved | High | Low | Deserve more visibility | Film-Noir, Documentary, War |
 | 🔵 Top-right — Dominant | High | High | Well-served by the system | Drama, Crime |
 | ⬜ Bottom-left — Niche | Low | Low | Small audience, lower-rated | Horror |
 | 🔴 Bottom-right — Overpromoted | Low | High | Overexposed relative to quality | Comedy, Action, Thriller |
-""")
+        """
+    )
 
 st.divider()
 
@@ -442,24 +460,6 @@ st.header("6. Business Recommendation")
 
 st.markdown(
     """
-    Section 3 - Bias Evidence confirmed genre-level bias is real: Genres such as Film-Noir, Documentary, and War are 
-    systematically underexposed relative to their quality (r = −0.266).
-
-    Section 4 - ML Insights revealed that at the film level, `avg_rating` accounts for 88% of predictive 
-    power — genre features contribute only ~12%. Genre-based curation alone is therefore 
-    insufficient as an intervention.
-
-    The data supports a three-layer strategy:
-    """
-)
-
-
-# Each intervention uses a left border bar instead of a full colored box.
-# This gives visual structure and hierarchy without the heavy background of st.success().
-# It matches the cleaner aesthetic of the rest of the dashboard.
-# unsafe_allow_html=True is required to render custom HTML/CSS in st.markdown().
-st.markdown(
-    """
     <div style="
         border-left: 4px solid #198754;
         background-color: #f6fdf9;
@@ -472,14 +472,72 @@ st.markdown(
         </p>
         <p style="margin: 0;">
             Flag films with <code>avg_rating &gt;= 3.8</code> and 
-            <code>rating_count &lt;= 100</code> as candidates for boosted recommendation.
-            Section 4 shows avg_rating is the dominant signal at the film level. 
-            Targeting films directly — regardless of genre — captures more underserved 
-            content than genre-filtering alone. 1,662 statistically valid films 
-            (rating_count &gt;= 30) qualify under these thresholds in the current dataset.
+            <code>rating_count &lt;= 60</code> as candidates for boosted recommendation.
+            <br><br>
+            <b>Why 3.8?</b> The mean avg_rating among underserved films is 3.77. 
+            Setting the threshold at 3.8 targets films that demonstrate above-average 
+            quality signal within the underserved population — not an arbitrary cutoff, 
+            but the typical quality floor of this group.
+            <br><br>
+            <b>Why 60?</b> The median rating_count among underserved films is 58.5. 
+            Films below this threshold represent the lower half of the underserved 
+            population by exposure — where the suppression signal is strongest. 
+            Platforms with greater editorial capacity may consider raising this to 120 
+            (75th percentile), which expands the candidate pool to ~1,247 films. 
+            The right threshold depends on how many titles the editorial team can 
+            review per cycle and how many boosted slots are available.
         </p>
     </div>
+    """,
+    unsafe_allow_html=True
+)
 
+# Distribution charts: show where the thresholds sit within the actual data
+# This makes the threshold choices transparent and verifiable
+underserved = film_df[film_df['is_underserved'] == 1]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+# Left chart: avg_rating distribution
+# bins=30 splits the rating range into 30 intervals
+axes[0].hist(
+    underserved['avg_rating'],
+    bins=30,
+    color='steelblue',
+    edgecolor='white'
+)
+# axvline draws a vertical line at the threshold position
+axes[0].axvline(3.8, color='#d9534f', linestyle='--', linewidth=1.5, label='Threshold: 3.8')
+axes[0].set_title('avg_rating Distribution\n(Underserved Films)', fontsize=11)
+axes[0].set_xlabel('avg_rating', fontsize=10)
+axes[0].set_ylabel('Number of Films', fontsize=10)
+axes[0].legend(fontsize=9)
+
+# Right chart: rating_count distribution
+# Most films cluster near the low end, with a long tail toward 3,015
+# We cap the x-axis at 500 to make the main distribution visible
+# Films beyond 500 exist but are rare — showing full range would compress the chart
+axes[1].hist(
+    underserved['rating_count'],
+    bins=50,
+    color='steelblue',
+    edgecolor='white'
+)
+axes[1].axvline(60, color='#d9534f', linestyle='--', linewidth=1.5, label='Threshold: 60 (median)')
+axes[1].axvline(120, color='#f0ad4e', linestyle='--', linewidth=1.5, label='Alt threshold: 120 (75th pct)')
+axes[1].set_xlim(0, 500)
+axes[1].set_title('rating_count Distribution\n(Underserved Films, capped at 500)', fontsize=11)
+axes[1].set_xlabel('rating_count', fontsize=10)
+axes[1].set_ylabel('Number of Films', fontsize=10)
+axes[1].legend(fontsize=9)
+
+plt.tight_layout()
+st.pyplot(fig)
+
+st.markdown("---")
+
+st.markdown(
+    """
     <div style="
         border-left: 4px solid #198754;
         background-color: #f6fdf9;
@@ -492,14 +550,68 @@ st.markdown(
         </p>
         <p style="margin: 0;">
             Run quarterly Bias Score analysis across all genres. Flag any genre where 
-            <code>bias_score &gt; 0.3</code> for content team review. Section 3 shows 
-            genre-level patterns are real and measurable. A recurring audit catches drift — 
-            new content additions can shift Bias Scores over time. Five of 18 genres 
-            currently exceed the +0.3 threshold: Film-Noir (+0.94), Documentary (+0.78), 
-            War (+0.67), Western (+0.44), Animation (+0.33).
+            <code>bias_score &gt; 0.3</code> for content team review.
+            <br><br>
+            <b>Why 0.3?</b> Looking at the positive bias_score values, there is a natural 
+            gap between Animation (+0.33) and Mystery (+0.28). The 0.3 threshold sits at 
+            this gap — it is not arbitrary, but reflects where the data clusters into two 
+            groups: genres with a meaningful quality-exposure gap, and those with a smaller 
+            one. Platforms with limited editorial capacity may prefer a conservative 
+            threshold of 0.5, which flags only the three most severe cases: Film-Noir 
+            (+0.94), Documentary (+0.78), and War (+0.67).
         </p>
     </div>
+    """,
+    unsafe_allow_html=True
+)
 
+# Dot plot with threshold lines
+# A different view of the same data shown in Section 3 Bias Score bar chart.
+# The focus here is not ranking, but where the natural cutoff sits.
+df['rating_pct'] = df['avg_rating'].rank(pct=True)
+df['exposure_pct'] = df['rating_count'].rank(pct=True)
+df['bias_score'] = df['rating_pct'] - df['exposure_pct']
+genre_sorted = df.sort_values('bias_score', ascending=False).reset_index(drop=True)
+
+
+fig, ax = plt.subplots(figsize=(12, 5))
+
+# Color each dot: green if underserved, red if overpromoted
+colors = ['#2e7d32' if score > 0 else '#c62828' for score in genre_sorted['bias_score']]
+
+ax.scatter(
+    range(len(genre_sorted)),
+    genre_sorted['bias_score'],
+    color=colors,
+    s=80,
+    zorder=3
+)
+
+# Threshold lines
+ax.axhline(0.3, color='#f0ad4e', linestyle='--', linewidth=1.5, label='Audit threshold: 0.3')
+ax.axhline(0.5, color='#d9534f', linestyle='--', linewidth=1.5, label='Conservative threshold: 0.5')
+ax.axhline(0, color='gray', linestyle='-', linewidth=0.8)
+
+# Genre name labels on x axis
+ax.set_xticks(range(len(genre_sorted)))
+ax.set_xticklabels(genre_sorted['genres'], rotation=45, ha='right', fontsize=9)
+
+ax.set_ylabel('Bias Score', fontsize=10)
+ax.set_title('Genre Bias Score: Threshold Selection', fontsize=11)
+ax.legend(fontsize=9)
+
+plt.tight_layout()
+st.pyplot(fig)
+
+st.caption(
+    "This chart uses the same data as the Bias Score bar chart in Section 3. "
+    "The focus here is threshold selection rather than ranking — "
+    "the horizontal lines show where the natural gap in the data supports drawing the audit boundary."
+)
+
+
+st.markdown(
+    """
     <div style="
         border-left: 4px solid #198754;
         background-color: #f6fdf9;
@@ -511,18 +623,22 @@ st.markdown(
             Intervention 3 — Human-in-the-Loop Editorial Layer
         </p>
         <p style="margin: 0;">
-            Algorithm surfaces candidates; editorial team makes final curation decisions 
-            before any boost goes live. Every algorithm has blind spots. Limitation 1 
+            The proposed workflow: the algorithmic trigger from Intervention 1 and the 
+            quarterly genre audit from Intervention 2 surface candidate films and genres. 
+            An editorial team reviews this list on a fixed cadence before any boost goes 
+            live on the platform.
+            <br><br>
+            <b>Why not rely on the algorithm alone?</b> Two reasons. First, fixing one 
+            algorithmic bias can introduce another — a boost applied without human review 
+            may inadvertently over-correct and create new imbalances. Second, Limitation 1 
             confirms that <code>rating_count</code> cannot fully separate algorithmic 
-            suppression from small audience size — human judgment bridges this gap until 
-            cleaner exposure data is available.
+            suppression from small audience size. Until cleaner exposure data is available, 
+            human judgment is the most reliable check on edge cases the model cannot resolve.
         </p>
     </div>
     """,
     unsafe_allow_html=True
 )
-
-st.markdown("---")
 
 st.caption(
     "StreamLens — Genre Fairness Audit for Streaming Recommendations | "
