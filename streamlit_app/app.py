@@ -18,16 +18,85 @@ df = pd.read_csv("data/processed/genre_summary.csv")
 film_df = pd.read_csv("data/processed/film_underserved.csv")
 
 # ── Header ───────────────────────────────────────────────────────────────
-st.title("🎬 StreamLens")
-st.markdown("**Genre Fairness Audit for Streaming Recommendation Systems**")
-st.markdown("*Detecting systematic popularity bias using MovieLens data*") # *斜體*
+# Left blue accent line + project label using HTML
+# unsafe_allow_html=True is required to render custom HTML in Streamlit
+st.markdown(
+    """
+    <div style="
+        border-left: 4px solid #378add;
+        padding: 0.15rem 0 0.15rem 1rem;
+        margin-bottom: 0.5rem;
+    ">
+        <div style="
+            font-size: 11px;
+            font-weight: 500;
+            color: #378add;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        ">Genre fairness audit</div>
+        <div style="
+            font-size: 28px;
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 4px;
+        ">🎬 StreamLens</div>
+        <div style="
+            font-size: 14px;
+            color: gray;
+            line-height: 1.6;
+        ">Investigating whether niche genres, despite higher average ratings,
+        receive systematically lower exposure on streaming platforms.</div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-st.divider() # 顯示水平分割線
+# ── Stats row ─────────────────────────────────────────────────────────────
+# st.columns([1,1,1]) splits the layout into 3 equal columns
+# We use a light gray background on the stats row via a container div
+st.markdown(
+    f"""
+    <div style="
+        background-color: #f7f8fa;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    ">
+        <div>
+            <div style="font-size: 11px; color: gray; margin-bottom: 3px;">Ratings analysed</div>
+            <div style="font-size: 22px; font-weight: 500;">33.8M</div>
+            <div style="font-size: 11px; color: gray;">MovieLens ml-latest</div>
+        </div>
+        <div>
+            <div style="font-size: 11px; color: gray; margin-bottom: 3px;">Genres compared</div>
+            <div style="font-size: 22px; font-weight: 500;">{len(df)}</div>
+            <div style="font-size: 11px; color: gray;">Across 86,537 films</div>
+        </div>
+        <div>
+            <div style="font-size: 11px; color: gray; margin-bottom: 3px;">Underserved films</div>
+            <div style="font-size: 22px; font-weight: 500;">1,662</div>
+            <div style="font-size: 11px; color: gray;">Rating count ≥ 30</div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+st.divider()
 
 # ════════════════════════════════════════════════════════════════════════
 # SECTION 1: THE PROBLEM
 # ════════════════════════════════════════════════════════════════════════
-st.header("1. The Problem")
+st.markdown(
+    "<h2 style='font-weight: 500; font-size: 22px;'>1. The Problem</h2>",
+    unsafe_allow_html=True
+)
 
 st.markdown("""
 Streaming platforms like Netflix rely on recommendation algorithms to surface content. 
@@ -50,22 +119,15 @@ st.divider()
 # ════════════════════════════════════════════════════════════════════════
 # SECTION 2: THE DATA
 # ════════════════════════════════════════════════════════════════════════
-st.header("2. The Data")
+st.markdown(
+    "<h2 style='font-weight: 500; font-size: 22px;'>2. The Data</h2>",
+    unsafe_allow_html=True
+)
 
 st.markdown("""
 **Dataset:** [MovieLens ml-latest](https://grouplens.org/datasets/movielens/) 
 — a public benchmark dataset widely used in recommendation system research.
 """)
-
-# Key statistics
-col1, col2, col3 = st.columns(3) # st.columns() 把版面切成 n 欄位，讓元件並排顯示而不是從上到下堆疊
-
-with col1:
-    st.metric("Total Ratings", "33,832,162") # st.metrics() 顯示數字卡片，有標題和數值，適合展示統計相關文字
-with col2:
-    st.metric("Movies", "86,537")
-with col3:
-    st.metric("Genres Analysed", str(len(df))) # len(df) 回傳 dataframe的列述（幾筆資料）
 
 st.markdown("""
 **Methodology note:** Movies tagged with multiple genres (e.g. *Action | Adventure*) 
@@ -80,7 +142,10 @@ st.divider()
 # ════════════════════════════════════════════════════════════════════════
 # SECTION 3: BIAS EVIDENCE
 # ════════════════════════════════════════════════════════════════════════
-st.header("3. Bias Evidence")
+st.markdown(
+    "<h2 style='font-weight: 500; font-size: 22px;'>3. Bias Evidence</h2>",
+    unsafe_allow_html=True
+)
 
 st.markdown(
     """
@@ -94,13 +159,18 @@ st.markdown(
 )
 
 # ── Bias Score bar chart ────────────────────────────────────────────────
-st.subheader("Bias Score by Genre")
-
-st.image(
-    "outputs/figures/phase2_bias_score.png",
-    caption="Green = underserved (quality > exposure) | Red = overpromoted (exposure > quality)",
-    use_container_width=True
+st.markdown(
+    "<h3 style='font-weight: 500; font-size: 17px;'>Bias Score by Genre</h3>",
+    unsafe_allow_html=True
 )
+
+_, col_img, _ = st.columns([0.5, 2, 0.5])
+with col_img:
+    st.image(
+        "outputs/figures/phase2_bias_score.png",
+        caption="Green = underserved (quality > exposure) | Red = overpromoted (exposure > quality)",
+        use_container_width=True
+    )
 
 st.markdown(
     """
@@ -115,13 +185,20 @@ st.markdown(
 )
 
 # ── Correlation chart ───────────────────────────────────────────────────
-st.subheader("Quality vs. Exposure: Genre-Level Correlation")
-
-st.image(
-    "outputs/figures/phase2_correlation.png",
-    caption="Each dot = one genre. Pearson r = −0.266: higher-rated genres tend to receive less exposure.",
-    use_container_width=True
+st.markdown(
+    "<h3 style='font-weight: 500; font-size: 17px;'>Quality vs. Exposure: Genre-Level Correlation</h3>",
+    unsafe_allow_html=True
 )
+
+_, col_img, _ = st.columns([0.5, 2, 0.5])
+with col_img:
+    st.image(
+        "outputs/figures/phase2_correlation.png",
+        caption="Each dot = one genre. Pearson r = -0.2666: higher-rated genres tend to receive less exposure.",
+        use_container_width=True
+    )
+
+
 
 st.info(
     """
@@ -148,7 +225,10 @@ st.info(
 st.divider()
 
 # ── Quadrant chart ──────────────────────────────────────────────────────
-st.subheader("Quality vs. Exposure Quadrant")
+st.markdown(
+    "<h3 style='font-weight: 500; font-size: 17px;'>Quality vs. Exposure Quadrant</h3>",
+    unsafe_allow_html=True
+)
 
 st.markdown(
     """
@@ -162,11 +242,14 @@ st.markdown(
     """
 )
 
-st.image(
-    "outputs/figures/phase2_quadrant.png",
-    caption="Top-left quadrant = systematically underserved genres",
-    use_container_width=True
-)
+
+_, col_img, _ = st.columns([0.5, 2, 0.5])
+with col_img:
+    st.image(
+        "outputs/figures/phase2_quadrant.png",
+        caption="Top-left quadrant = systematically underserved genres",
+        use_container_width=True
+    )
 
 _, col_center, _ = st.columns([0.5, 3, 0.5])
 with col_center:
@@ -186,7 +269,10 @@ st.divider()
 # ════════════════════════════════════════════════════════════════════════
 # SECTION 4: ML INSIGHTS
 # ════════════════════════════════════════════════════════════════════════
-st.header("4. ML Insights")
+st.markdown(
+    "<h2 style='font-weight: 500; font-size: 22px;'>4. ML Insight</h2>",
+    unsafe_allow_html=True
+)
 
 # ── Segue from Bias Score Analysis ───────────────────────────────────────────────────
 st.markdown("""
@@ -211,7 +297,10 @@ based on its features.
 st.divider()
 
 # ── Model comparison ─────────────────────────────────────────────────────
-st.subheader("Model Comparison")
+st.markdown(
+    "<h3 style='font-weight: 500; font-size: 17px;'>Model Comparison</h3>",
+    unsafe_allow_html=True
+)
 
 st.markdown("""
 Two models were trained and compared. Since our goal is to **minimise missed 
@@ -235,7 +324,10 @@ This means the model successfully identifies **88% of truly underserved films**.
 st.divider()
 
 # ── Feature importance ───────────────────────────────────────────────────
-st.subheader("What Drives Underexposure? — Feature Importance")
+st.markdown(
+    "<h3 style='font-weight: 500; font-size: 17px;'>What Drives Underexposure? Feature Importance</h3>",
+    unsafe_allow_html=True
+)
 
 col_left, col_right = st.columns([1.2, 1])
 
@@ -294,7 +386,10 @@ signal — useful, but not sufficient on its own. (⚠️ These findings are sub
 st.divider()
 
 
-st.subheader("Interactive Film Explorer: Underserved Films")
+st.markdown(
+    "<h3 style='font-weight: 500; font-size: 17px;'>Interactive Film Explorer: Underserved Films</h3>",
+    unsafe_allow_html=True
+)
 
 st.info("""
 **Bias Score formula:**  Quality Percentile (avg_rating) − Exposure Percentile (rating_count) >> A higher Bias Score = higher quality relative to exposure = more underserved.
@@ -353,7 +448,10 @@ st.divider()
 # ============================================================
 # SECTION 5: Limitations & Future Work
 # ============================================================
-st.header("5. Limitations & Future Work")
+st.markdown(
+    "<h2 style='font-weight: 500; font-size: 22px;'>5. Limitations & Future Work</h2>",
+    unsafe_allow_html=True
+)
 
 st.markdown(
     "This analysis rests on several assumptions. "
@@ -456,7 +554,10 @@ st.divider()
 # ============================================================
 # SECTION 6: Business Recommendation
 # ============================================================
-st.header("6. Business Recommendation")
+st.markdown(
+    "<h2 style='font-weight: 500; font-size: 22px;'>6. Business Recommendation</h2>",
+    unsafe_allow_html=True
+)
 
 st.markdown(
     """
@@ -496,7 +597,7 @@ st.markdown(
 # This makes the threshold choices transparent and verifiable
 underserved = film_df[film_df['is_underserved'] == 1]
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+fig, axes = plt.subplots(1, 2, figsize=(12, 4), dpi=200)
 
 # Left chart: avg_rating distribution
 # bins=30 splits the rating range into 30 intervals
@@ -574,7 +675,7 @@ df['bias_score'] = df['rating_pct'] - df['exposure_pct']
 genre_sorted = df.sort_values('bias_score', ascending=False).reset_index(drop=True)
 
 
-fig, ax = plt.subplots(figsize=(12, 5))
+fig, ax = plt.subplots(figsize=(12, 5), dpi=200)
 
 # Color each dot: green if underserved, red if overpromoted
 colors = ['#2e7d32' if score > 0 else '#c62828' for score in genre_sorted['bias_score']]
